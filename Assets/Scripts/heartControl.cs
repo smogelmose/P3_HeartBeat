@@ -12,6 +12,9 @@ public class heartControl : MonoBehaviour
     public AudioClip beat2Sound;
     private AudioSource audioSource;
 
+    public float volume = 1.0f;
+    public float pitch = 1.0f;
+
     private float timeBetweenBeats;
     private float lastPlayTime;
     public float cooldownTime = 1.0f;
@@ -129,6 +132,8 @@ public class heartControl : MonoBehaviour
         if (elapsedTimeSinceLastPlay >= cooldownTime && bpmValue > 0)
         {
             audioSource.clip = beat1Sound;
+            audioSource.volume = volume;
+            audioSource.pitch = pitch;
             audioSource.Play(); ;
             
             float delay = audioSource.clip.length;

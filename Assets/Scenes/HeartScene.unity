@@ -346,8 +346,16 @@ PrefabInstance:
     m_TransformParent: {fileID: 798039387}
     m_Modifications:
     - target: {fileID: 1543058250657346735, guid: 9107ea8d797415a44a690d3103dc0200, type: 3}
+      propertyPath: pitch
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1543058250657346735, guid: 9107ea8d797415a44a690d3103dc0200, type: 3}
+      propertyPath: volume
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1543058250657346735, guid: 9107ea8d797415a44a690d3103dc0200, type: 3}
       propertyPath: cooldownTime
-      value: 0.8
+      value: 0.75
       objectReference: {fileID: 0}
     - target: {fileID: 1543058250657346735, guid: 9107ea8d797415a44a690d3103dc0200, type: 3}
       propertyPath: scaleMultiplier
