@@ -49,7 +49,7 @@ public class heartControl : MonoBehaviour
 
         if (bpmValue <= 0)
         {
-            bpmValue = 220f;
+            bpmValue =80f;
         }
 
         ControlHeart(bpmValue);
