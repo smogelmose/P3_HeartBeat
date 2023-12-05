@@ -49,7 +49,7 @@ public class heartControl : MonoBehaviour
 
         if (bpmValue <= 0)
         {
-            bpmValue = 95f;
+            bpmValue = 220f;
         }
 
         ControlHeart(bpmValue);
@@ -60,45 +60,38 @@ public class heartControl : MonoBehaviour
 
     void HeartAnimation(float bpmValue)
     {
-        if (bpmValue > 27 && bpmValue < 54)
+        switch (bpmValue)
         {
-            SetAnimationTrigger("VerySlowTrigger");
-        }
-        else if (bpmValue >= 54 && bpmValue < 84)
-        {
-            SetAnimationTrigger("CalmTrigger");
-        }
-        else if (bpmValue >= 84 && bpmValue < 100)
-        {
-            SetAnimationTrigger("FastTrigger");
-        }
-        else if (bpmValue >= 100 && bpmValue < 112)
-        {
-            SetAnimationTrigger("PanicTrigger");
-        }
-        else if (bpmValue >= 112 && bpmValue < 142)
-        {
-            SetAnimationTrigger("VeryFastTrigger");
-        }
-        else if (bpmValue >= 142 && bpmValue < 178)
-        {
-            SetAnimationTrigger("ArrhythmiaTrigger");
-        }
-        else if (bpmValue >= 178 && bpmValue < 210)
-        {
-            SetAnimationTrigger("SevereArrhythmiaTrigger");
-        }
-        else if (bpmValue >= 210 && bpmValue < 234)
-        {
-            SetAnimationTrigger("TachycardiaTrigger");
-        }
-        else if (bpmValue <= 5 && bpmValue < 27)
-        {
-            SetAnimationTrigger("NearDeathTrigger");
-        }
-        else if (bpmValue <= 0 && bpmValue < 5)
-        {
-            SetAnimationTrigger("DeathTrigger");
+            case 0:
+                SetAnimationTrigger("DeathTrigger");
+                break;
+            case >= 1 and < 27:
+                SetAnimationTrigger("NearDeathTrigger");
+                break;
+            case > 27 and < 54:
+                SetAnimationTrigger("VerySlowTrigger");
+                break;
+            case >= 54 and < 84:
+                SetAnimationTrigger("CalmTrigger");
+                break;
+            case >= 84 and < 100:
+                SetAnimationTrigger("FastTrigger");
+                break;
+            case >= 100 and < 112:
+                SetAnimationTrigger("PanicTrigger");
+                break;
+            case >= 112 and < 142:
+                SetAnimationTrigger("VeryFastTrigger");
+                break;
+            case >= 142 and < 178:
+                SetAnimationTrigger("ArrhythmiaTrigger");
+                break;
+            case >= 178 and < 210:
+                SetAnimationTrigger("SevereArrhythmiaTrigger");
+                break;
+            case >= 210 and < 234:
+                SetAnimationTrigger("TachycardiaTrigger");
+                break;
         }
     }
 
