@@ -4,6 +4,8 @@ using System.Collections;
 
 public class heartControl : MonoBehaviour
 {
+    public float defaultBPM = 80f;
+
     public float baseScale = 1.0f;
     public float scaleMultiplier = 0.1f;
     public BPMReceiver bpmReceiver;
@@ -18,7 +20,7 @@ public class heartControl : MonoBehaviour
     private float timeBetweenBeats;
     private float lastPlayTime;
     public float cooldownTime = 1.0f;
-
+ 
     private Animator heartAnimator;
 
     void Start()
@@ -41,58 +43,88 @@ public class heartControl : MonoBehaviour
         {
             Debug.LogError("Animator component not found on the GameObject.");
         }
+
+        baseScale = 1.0f; 
     }
 
     void Update()
     {
         float bpmValue = bpmReceiver.GetLatestBPM();
 
-        if (bpmValue <= 0)
+        if (bpmValue >= 300)
         {
-            bpmValue =80f;
+            bpmValue = 0;
+        }
+        else if (bpmValue <= 0)
+        {
+            bpmValue = defaultBPM;
         }
 
-        ControlHeart(bpmValue);
-        ApplyPulsatingEffect(bpmValue);
-        PlayHeartSound(bpmValue);
+        volume = Mathf.Clamp(bpmValue / 200f, 0.2f, 1.0f);
+        pitch = Mathf.Clamp(bpmValue / 100f, 0.5f, 2.0f);
+        cooldownTime = Mathf.Clamp(60f / bpmValue, 0.1f, 2.0f);
+
         HeartAnimation(bpmValue);
+        ApplyPulsatingEffect(bpmValue); 
+        PlayHeartSound(bpmValue);
     }
 
     void HeartAnimation(float bpmValue)
     {
-        switch (bpmValue)
+        string triggerName = "";
+
+        if (bpmValue == 0)
         {
-            case 0:
-                SetAnimationTrigger("DeathTrigger");
-                break;
-            case >= 1 and < 27:
-                SetAnimationTrigger("NearDeathTrigger");
-                break;
-            case > 27 and < 54:
-                SetAnimationTrigger("VerySlowTrigger");
-                break;
-            case >= 54 and < 84:
-                SetAnimationTrigger("CalmTrigger");
-                break;
-            case >= 84 and < 100:
-                SetAnimationTrigger("FastTrigger");
-                break;
-            case >= 100 and < 112:
-                SetAnimationTrigger("PanicTrigger");
-                break;
-            case >= 112 and < 142:
-                SetAnimationTrigger("VeryFastTrigger");
-                break;
-            case >= 142 and < 178:
-                SetAnimationTrigger("ArrhythmiaTrigger");
-                break;
-            case >= 178 and < 210:
-                SetAnimationTrigger("SevereArrhythmiaTrigger");
-                break;
-            case >= 210 and < 234:
-                SetAnimationTrigger("TachycardiaTrigger");
-                break;
+            triggerName = "DeathTrigger";
+            scaleMultiplier = 0.02f;
         }
+        else if (bpmValue > 0 && bpmValue < 40)
+        {
+            triggerName = "NearDeathTrigger";
+            scaleMultiplier = 0.08f;
+        }
+        else if (bpmValue >= 40 && bpmValue < 60)
+        {
+            triggerName = "VerySlowTrigger";
+            scaleMultiplier = 0.12f;
+        }
+        else if (bpmValue >= 60 && bpmValue < 100)
+        {
+            triggerName = "CalmTrigger";
+            scaleMultiplier = 0.15f;
+        }
+        else if (bpmValue >= 100 && bpmValue < 120)
+        {
+            triggerName = "FastTrigger";
+            scaleMultiplier = 0.18f;
+        }
+        else if (bpmValue >= 120 && bpmValue < 140)
+        {
+            triggerName = "PanicTrigger";
+            scaleMultiplier = 0.22f;
+        }
+        else if (bpmValue >= 140 && bpmValue < 160)
+        {
+            triggerName = "VeryFastTrigger";
+            scaleMultiplier = 0.25f;
+        }
+        else if (bpmValue >= 160 && bpmValue < 180)
+        {
+            triggerName = "ArrhythmiaTrigger";
+            scaleMultiplier = 0.28f;
+        }
+        else if (bpmValue >= 180 && bpmValue < 220)
+        {
+            triggerName = "SevereArrhythmiaTrigger";
+            scaleMultiplier = 0.32f;
+        }
+        else if (bpmValue >= 220)
+        {
+            triggerName = "TachycardiaTrigger";
+            scaleMultiplier = 0.35f;
+        }
+
+        SetAnimationTrigger(triggerName);
     }
 
     void SetAnimationTrigger(string triggerName)
