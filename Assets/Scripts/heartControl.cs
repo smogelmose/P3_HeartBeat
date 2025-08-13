@@ -23,44 +23,37 @@ public class heartControl : MonoBehaviour
     private Animator heartAnimator;
     public float animationSpeed = 1.0f;
 
-    // Test mode fields
+    // Test mode
     public bool enableTestMode = true;
     private float simulatedBPM = 60f;
-    private bool testTriggered = false;
+    private bool nearDeathTriggered = false;
+    private bool deathTriggered = false;
 
     void Start()
     {
-        if (bpmReceiver == null)
-        {
-            Debug.LogWarning("BPMReceiver is not assigned. Running in test mode.");
-        }
-
-        audioSource = GetComponent<AudioSource>();
-        if (audioSource == null)
-        {
-            audioSource = gameObject.AddComponent<AudioSource>();
-        }
-
-        lastPlayTime = Time.time;
+        EnsureAudioSource();
 
         heartAnimator = GetComponent<Animator>();
         if (heartAnimator == null)
         {
-            Debug.LogError("Animator component not found on the GameObject.");
+            Debug.LogError("[Heart] Animator component not found on the GameObject.");
         }
 
         baseScale = 1.0f;
+        lastPlayTime = Time.time;
     }
 
     void Update()
     {
+        EnsureAudioSource();
+
         float bpmValue = GetBPMValue();
 
         volume = Mathf.Clamp(bpmValue / 200f, 0.2f, 1.0f);
         pitch = Mathf.Clamp(bpmValue / 100f, 0.5f, 2.0f);
-        cooldownTime = Mathf.Clamp(60f / bpmValue, 0.1f, 2.0f);
+        cooldownTime = Mathf.Clamp(60f / Mathf.Max(bpmValue, 1f), 0.1f, 2.0f);
 
-        if (heartAnimator != null)
+        if (heartAnimator != null && bpmValue > 0)
         {
             animationSpeed = Mathf.Clamp(bpmValue / 80f, 0.5f, 2.0f);
             heartAnimator.speed = animationSpeed;
@@ -71,28 +64,42 @@ public class heartControl : MonoBehaviour
         PlayHeartSound(bpmValue);
     }
 
+    void EnsureAudioSource()
+    {
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+                Debug.Log("[Heart] Added missing AudioSource component at runtime.");
+            }
+        }
+    }
+
     float GetBPMValue()
     {
         if (bpmReceiver != null)
         {
             float realBPM = bpmReceiver.GetLatestBPM();
-
             if (realBPM > 0)
             {
-                enableTestMode = false; // stop test mode
+                enableTestMode = false; // Stop simulation if real BPM detected
                 return realBPM;
             }
         }
 
-        if (enableTestMode)
+        if (enableTestMode && !deathTriggered)
         {
-            if (!testTriggered)
+            if (!nearDeathTriggered)
             {
-                simulatedBPM += Time.deltaTime * 30f; // ramp up
+                simulatedBPM += Time.deltaTime * 30f; // Increase gradually
                 if (simulatedBPM >= 300)
                 {
                     simulatedBPM = 300;
-                    testTriggered = true; // triggers NearDeath
+                    nearDeathTriggered = true;
+                    Debug.Log("[Heart] NearDeath reached in test mode.");
+                    StartCoroutine(TriggerDeathAfterDelay(3f)); // Simulate cardiac arrest
                 }
             }
             return simulatedBPM;
@@ -101,13 +108,21 @@ public class heartControl : MonoBehaviour
         return defaultBPM;
     }
 
+    IEnumerator TriggerDeathAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        simulatedBPM = 0;
+        deathTriggered = true;
+        Debug.Log("[Heart] Death state reached in test mode.");
+    }
+
     void HeartAnimation(float bpmValue)
     {
         if (bpmValue == 0)
         {
             scaleMultiplier = 0.02f;
             SetAnimationTrigger("DeathTrigger");
-            if (heartAnimator != null) heartAnimator.speed = 0f; // stop animation
+            if (heartAnimator != null) heartAnimator.speed = 0f;
             return;
         }
         else if (bpmValue > 0 && bpmValue < 40)
@@ -183,7 +198,7 @@ public class heartControl : MonoBehaviour
 
     void PlayHeartSound(float bpmValue)
     {
-        if (bpmValue <= 0) return;
+        if (bpmValue <= 0 || audioSource == null) return;
 
         float currentTime = Time.time;
         float elapsedTimeSinceLastPlay = currentTime - lastPlayTime;
@@ -205,8 +220,10 @@ public class heartControl : MonoBehaviour
     IEnumerator PlayBeat2AfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-
-        audioSource.clip = beat2Sound;
-        audioSource.Play();
+        if (audioSource != null && beat2Sound != null)
+        {
+            audioSource.clip = beat2Sound;
+            audioSource.Play();
+        }
     }
 }
