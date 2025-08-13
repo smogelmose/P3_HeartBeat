@@ -23,6 +23,8 @@ public class heartControl : MonoBehaviour
  
     private Animator heartAnimator;
 
+    public float animationSpeed = 1.0f; 
+
     void Start()
     {
         if (bpmReceiver == null)
@@ -64,10 +66,11 @@ public class heartControl : MonoBehaviour
         pitch = Mathf.Clamp(bpmValue / 100f, 0.5f, 2.0f);
         cooldownTime = Mathf.Clamp(60f / bpmValue, 0.1f, 2.0f);
 
-        // Correlate animation speed with BPM
+  
         if (heartAnimator != null)
         {
-            heartAnimator.speed = Mathf.Clamp(bpmValue / 80f, 0.5f, 2.0f); // 80 BPM is normal speed
+            animationSpeed = Mathf.Clamp(bpmValue / 80f, 0.5f, 2.0f);
+            heartAnimator.speed = animationSpeed;
         }
 
         HeartAnimation(bpmValue);
@@ -81,7 +84,7 @@ public class heartControl : MonoBehaviour
         {
             scaleMultiplier = 0.02f;
             SetAnimationTrigger("DeathTrigger");
-            return; // Exit so no other triggers are set
+            return;
         }
         else if (bpmValue > 0 && bpmValue < 40)
         {
