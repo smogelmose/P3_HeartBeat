@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections;
 
-
 public class heartControl : MonoBehaviour
 {
     public float defaultBPM = 80f;
@@ -20,16 +19,20 @@ public class heartControl : MonoBehaviour
     private float timeBetweenBeats;
     private float lastPlayTime;
     public float cooldownTime = 1.0f;
- 
-    private Animator heartAnimator;
 
-    public float animationSpeed = 1.0f; 
+    private Animator heartAnimator;
+    public float animationSpeed = 1.0f;
+
+    // Test mode fields
+    public bool enableTestMode = true;
+    private float simulatedBPM = 60f;
+    private bool testTriggered = false;
 
     void Start()
     {
         if (bpmReceiver == null)
         {
-            Debug.LogError("BPMReceiver is not assigned to HeartControl.");
+            Debug.LogWarning("BPMReceiver is not assigned. Running in test mode.");
         }
 
         audioSource = GetComponent<AudioSource>();
@@ -46,27 +49,17 @@ public class heartControl : MonoBehaviour
             Debug.LogError("Animator component not found on the GameObject.");
         }
 
-        baseScale = 1.0f; 
+        baseScale = 1.0f;
     }
 
     void Update()
     {
-        float bpmValue = bpmReceiver.GetLatestBPM();
-
-        if (bpmValue >= 300)
-        {
-            bpmValue = 0;
-        }
-        else if (bpmValue <= 0)
-        {
-            bpmValue = defaultBPM;
-        }
+        float bpmValue = GetBPMValue();
 
         volume = Mathf.Clamp(bpmValue / 200f, 0.2f, 1.0f);
         pitch = Mathf.Clamp(bpmValue / 100f, 0.5f, 2.0f);
         cooldownTime = Mathf.Clamp(60f / bpmValue, 0.1f, 2.0f);
 
-  
         if (heartAnimator != null)
         {
             animationSpeed = Mathf.Clamp(bpmValue / 80f, 0.5f, 2.0f);
@@ -74,8 +67,38 @@ public class heartControl : MonoBehaviour
         }
 
         HeartAnimation(bpmValue);
-        ApplyPulsatingEffect(bpmValue); 
+        ApplyPulsatingEffect(bpmValue);
         PlayHeartSound(bpmValue);
+    }
+
+    float GetBPMValue()
+    {
+        if (bpmReceiver != null)
+        {
+            float realBPM = bpmReceiver.GetLatestBPM();
+
+            if (realBPM > 0)
+            {
+                enableTestMode = false; // stop test mode
+                return realBPM;
+            }
+        }
+
+        if (enableTestMode)
+        {
+            if (!testTriggered)
+            {
+                simulatedBPM += Time.deltaTime * 30f; // ramp up
+                if (simulatedBPM >= 300)
+                {
+                    simulatedBPM = 300;
+                    testTriggered = true; // triggers NearDeath
+                }
+            }
+            return simulatedBPM;
+        }
+
+        return defaultBPM;
     }
 
     void HeartAnimation(float bpmValue)
@@ -84,6 +107,7 @@ public class heartControl : MonoBehaviour
         {
             scaleMultiplier = 0.02f;
             SetAnimationTrigger("DeathTrigger");
+            if (heartAnimator != null) heartAnimator.speed = 0f; // stop animation
             return;
         }
         else if (bpmValue > 0 && bpmValue < 40)
@@ -126,10 +150,16 @@ public class heartControl : MonoBehaviour
             SetAnimationTrigger("SevereArrhythmiaTrigger");
             scaleMultiplier = 0.32f;
         }
-        else if (bpmValue >= 220)
+        else if (bpmValue >= 220 && bpmValue < 300)
         {
             SetAnimationTrigger("TachycardiaTrigger");
             scaleMultiplier = 0.35f;
+        }
+        else if (bpmValue >= 300)
+        {
+            SetAnimationTrigger("NearDeathTrigger");
+            if (heartAnimator != null) heartAnimator.speed = 2.0f;
+            cooldownTime = 0.1f;
         }
     }
 
@@ -137,18 +167,14 @@ public class heartControl : MonoBehaviour
     {
         if (heartAnimator != null)
         {
+            heartAnimator.ResetTrigger(triggerName);
             heartAnimator.SetTrigger(triggerName);
         }
     }
 
-    void ControlHeart(float bpmValue)
-    {
-        float scale = baseScale + scaleMultiplier * bpmValue;
-        transform.localScale = new Vector3(scale, scale, scale);
-    }
-
     void ApplyPulsatingEffect(float bpmValue)
     {
+        if (bpmValue <= 0) return;
         timeBetweenBeats = 60.0f / bpmValue;
         float pulsatingScale = Mathf.PingPong(Time.time / timeBetweenBeats, 1.0f);
         float newScale = baseScale + scaleMultiplier * pulsatingScale;
@@ -157,16 +183,18 @@ public class heartControl : MonoBehaviour
 
     void PlayHeartSound(float bpmValue)
     {
+        if (bpmValue <= 0) return;
+
         float currentTime = Time.time;
         float elapsedTimeSinceLastPlay = currentTime - lastPlayTime;
-        
-        if (elapsedTimeSinceLastPlay >= cooldownTime && bpmValue > 0)
+
+        if (elapsedTimeSinceLastPlay >= cooldownTime)
         {
             audioSource.clip = beat1Sound;
             audioSource.volume = volume;
             audioSource.pitch = pitch;
-            audioSource.Play(); ;
-            
+            audioSource.Play();
+
             float delay = audioSource.clip.length;
             StartCoroutine(PlayBeat2AfterDelay(delay));
 
@@ -181,5 +209,4 @@ public class heartControl : MonoBehaviour
         audioSource.clip = beat2Sound;
         audioSource.Play();
     }
-
 }
